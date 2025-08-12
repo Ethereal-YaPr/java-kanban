@@ -1,3 +1,9 @@
+import ru.common.manager.EpicTask;
+import ru.common.manager.SubTask;
+import ru.common.manager.Task;
+import ru.common.manager.TaskStatus;
+import ru.common.model.TaskManager;
+
 import java.util.List;
 
 public class Main {
@@ -9,70 +15,48 @@ public class Main {
         EpicTask marketingEpic = manager.createEpic(new EpicTask("Маркетинговая кампания", "Продвижение на рынке"));
         printAllTasks(manager);
 
-
         System.out.println("\n=== СОЗДАНИЕ ЗАДАЧ ===");
-        Task designTask = manager.createTask(new Task("Проектирование архитектуры", "Спроектировать микросервисную архитектуру", developmentEpic));
-        Task apiTask = manager.createTask(new Task("Разработка API", "Создать основное API", developmentEpic));
-        Task adsTask = manager.createTask(new Task("Создание рекламы", "Разработать рекламные материалы", marketingEpic));
+        Task designTask = manager.createTask(new Task("Проектирование архитектуры", "Спроектировать микросервисную архитектуру", developmentEpic.getId()));
+        Task apiTask = manager.createTask(new Task("Разработка API", "Создать основное API", developmentEpic.getId()));
+        Task adsTask = manager.createTask(new Task("Создание рекламы", "Разработать рекламные материалы", marketingEpic.getId()));
         printAllTasks(manager);
-
 
         System.out.println("\n=== СОЗДАНИЕ ПОДЗАДАЧ ===");
-        SubTask dbDesign = manager.createSubTask(new SubTask("Проектирование БД", "Создать ER-диаграмму", designTask));
-        SubTask authService = manager.createSubTask(new SubTask("Сервис авторизации", "JWT аутентификация", apiTask));
+        SubTask dbDesign = manager.createSubTask(new SubTask("Проектирование БД", "Создать ER-диаграмму", designTask.getId()));
+        SubTask authService = manager.createSubTask(new SubTask("Сервис авторизации", "JWT аутентификация", apiTask.getId()));
         printAllTasks(manager);
 
+        System.out.println("\n=== ОБНОВЛЕНИЕ СТАТУСОВ ===");
+        dbDesign.setStatus(TaskStatus.IN_PROGRESS);
+        manager.updateTask(dbDesign);
 
-        System.out.println("\n=== ОБНОВЛЕНИЕ ОБЪЕКТОВ ===");
-        developmentEpic.setDescription("Обновленное описание разработки");
-        manager.updateEpic(developmentEpic);
+        authService.setStatus(TaskStatus.DONE);
+        manager.updateTask(authService);
 
         adsTask.setStatus(TaskStatus.IN_PROGRESS);
         manager.updateTask(adsTask);
-
-        authService.setStatus(TaskStatus.DONE);
-        manager.updateSubTask(authService);
         printAllTasks(manager);
 
+        System.out.println("\n=== ПОИСК ПО ID ===");
+        Task foundTask = manager.getTaskById(designTask.getId());
+        System.out.println("Найдена задача: " + foundTask.getName());
 
-        System.out.println("\n=== РАБОТА ЧЕРЕЗ ID ===");
-        int epicId = developmentEpic.getId();
-        int taskId = designTask.getId();
-        int subtaskId = dbDesign.getId();
+        List<SubTask> subtasks = manager.getSubTasksByEpicId(developmentEpic.getId());
+        System.out.println("Подзадачи эпика 'Разработка продукта':");
+        subtasks.forEach(st -> System.out.println("  • " + st.getName()));
 
-        EpicTask foundEpic = manager.getEpicById(epicId);
-        System.out.println("Найден эпик по ID: " + foundEpic.getName());
-
-
-        System.out.println("\n=== ТЕСТИРОВАНИЕ УДАЛЕНИЯ ===");
-        System.out.println("Удаляем подзадачу по объекту:");
-        manager.removeSubTask(authService);
+        System.out.println("\n=== УДАЛЕНИЕ ===");
+        System.out.println("Удаляем задачу:");
+        manager.removeTask(apiTask);
         printAllTasks(manager);
 
-        System.out.println("\nУдаляем задачу по ID:");
-        manager.removeTaskById(apiTask.getId());
-        printAllTasks(manager);
-
-        System.out.println("\nУдаляем эпик по объекту (каскадное удаление):");
+        System.out.println("\nУдаляем эпик (каскадное удаление):");
         manager.removeEpic(marketingEpic);
         printAllTasks(manager);
 
-
-        System.out.println("\n=== ПОДЗАДАЧИ ЭПИКА ===");
-        List<SubTask> epicSubTasks = manager.getSubTasksByEpicId(developmentEpic.getId());
-        epicSubTasks.forEach(st -> System.out.println("  • " + st.getName()));
-
-
-        System.out.println("\n=== ОЧИСТКА МЕНЕДЖЕРА ===");
-        System.out.println("Удаляем все подзадачи:");
+        System.out.println("\n=== ОЧИСТКА ===");
         manager.removeAllSubTasks();
-        printAllTasks(manager);
-
-        System.out.println("\nУдаляем все задачи:");
         manager.removeAllTasks();
-        printAllTasks(manager);
-
-        System.out.println("\nУдаляем все эпики:");
         manager.removeAllEpics();
         printAllTasks(manager);
     }
@@ -85,14 +69,22 @@ public class Main {
         manager.getAllEpics().forEach(epic -> {
             System.out.println("  [EPIC] " + epic.getName() + " (" + epic.getStatus() + ")");
 
-            System.out.println("    Задачи (" + epic.getTasks().size() + "):");
-            epic.getTasks().values().forEach(task -> {
+            List<Task> epicTasks = manager.getAllTasks().stream()
+                    .filter(task -> task.getParentId() != null && task.getParentId() == epic.getId())
+                    .toList();
+
+            System.out.println("    Задачи (" + epicTasks.size() + "):");
+            epicTasks.forEach(task -> {
                 System.out.println("    • [TASK] " + task.getName() + " (" + task.getStatus() + ")");
 
-                System.out.println("      Подзадачи (" + task.getSubTasks().size() + "):");
-                task.getSubTasks().values().forEach(subTask -> {
-                    System.out.println("      ◦ [SUBTASK] " + subTask.getName() + " (" + subTask.getStatus() + ")");
-                });
+                List<SubTask> taskSubtasks = manager.getAllSubTasks().stream()
+                        .filter(st -> st.getParentId() != null && st.getParentId() == task.getId())
+                        .toList();
+
+                System.out.println("      Подзадачи (" + taskSubtasks.size() + "):");
+                taskSubtasks.forEach(st ->
+                        System.out.println("      ◦ [SUBTASK] " + st.getName() + " (" + st.getStatus() + ")")
+                );
             });
         });
         System.out.println("─".repeat(50));
