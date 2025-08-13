@@ -1,4 +1,4 @@
-package ru.common.manager;
+package ru.common.model;
 
 public enum TaskStatus {
     NEW,

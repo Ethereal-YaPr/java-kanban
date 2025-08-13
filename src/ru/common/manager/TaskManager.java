@@ -1,8 +1,11 @@
-package ru.common.model;
+package ru.common.manager;
 
-import ru.common.manager.EpicTask;
-import ru.common.manager.SubTask;
-import ru.common.manager.Task;
+import ru.common.model.EpicTask;
+import ru.common.model.SubTask;
+import ru.common.model.Task;
+import ru.common.manager.TaskManager;
+import ru.common.model.TaskStatus;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -28,11 +31,15 @@ public class TaskManager {
     }
 
     public void removeAllEpics() {
-        epics.forEach(epic ->
-                tasks.stream()
-                        .filter(task -> epic.getId() == task.getParentId())
-                        .forEach(this::removeTask)
-        );
+        List<EpicTask> epicsToRemove = new ArrayList<>(epics);
+        for (EpicTask epic : epicsToRemove) {
+            List<Task> tasksToRemove = tasks.stream()
+                    .filter(task -> task instanceof SubTask && ((SubTask) task).getParentId() == epic.getId())
+                    .toList();
+            for (Task task : tasksToRemove) {
+                removeTask(task);
+            }
+        }
         epics.clear();
     }
 
@@ -53,7 +60,10 @@ public class TaskManager {
 
     public boolean removeEpic(EpicTask epic) {
         if (epic == null) return false;
-        tasks.removeIf(task -> epic.getId() == task.getParentId());
+        List<Task> tasksToRemove = tasks.stream()
+                .filter(task -> epic.getId() == task.getId())
+                .toList();
+        tasksToRemove.forEach(this::removeTask);
         return epics.remove(epic);
     }
 
@@ -68,9 +78,8 @@ public class TaskManager {
     }
 
     public void removeAllTasks() {
-        tasks.forEach(task ->
-                subTasks.removeIf(subTask -> task.getId() == subTask.getParentId())
-        );
+        List<Task> tasksToRemove = new ArrayList<>(tasks);
+        tasksToRemove.forEach(this::removeTask);
         tasks.clear();
     }
 
@@ -85,28 +94,40 @@ public class TaskManager {
         Objects.requireNonNull(task, "Задача не может быть null");
         int index = getIndexById(tasks, task.getId());
         if (index == -1) return false;
-
-        Task existingTask = tasks.get(index);
-        task.setParentId(existingTask.getParentId());
         tasks.set(index, task);
         return true;
     }
 
     public boolean removeTask(Task task) {
         if (task == null) return false;
-        subTasks.removeIf(subTask -> task.getId() == subTask.getParentId());
+
+        List<SubTask> subtasksToRemove = subTasks.stream()
+                .filter(st -> task.getId() == st.getId())
+                .toList();
+        subtasksToRemove.forEach(st -> subTasks.remove(st));
+
+        if (task instanceof SubTask subTask) {
+            Task parentTask = getTaskById(subTask.getParentId());
+            if (parentTask instanceof EpicTask epicTask) {
+                epicTask.removeSubTaskId(task.getId());
+                epicTask.setStatus(calculateEpicStatus(epicTask));
+            }
+        }
+
         return tasks.remove(task);
     }
 
-    // Методы для работы с подзадачами
     public SubTask createSubTask(SubTask subTask) {
         Objects.requireNonNull(subTask, "Подзадача не может быть null");
-        if (getTaskById(subTask.getParentId()) == null) {
+        Task parentTask = getEpicById(subTask.getParentId());
+        if (parentTask == null) {
             throw new IllegalArgumentException("Родительская задача не найдена");
         }
         subTasks.add(subTask);
-        Task parentTask = getTaskById(subTask.getParentId());
-        parentTask.addSubTaskId(subTask.getId());
+        tasks.add(subTask);
+        if (parentTask instanceof EpicTask epicTask) {
+            epicTask.addSubTaskId(subTask.getId());
+        }
         return subTask;
     }
 
@@ -115,22 +136,48 @@ public class TaskManager {
     }
 
     public void removeAllSubTasks() {
-        tasks.forEach(task -> task.getSubTaskIds().clear());
+        epics.forEach(epic -> {
+            epic.getSubTaskIds().clear();
+            epic.setStatus(calculateEpicStatus(epic));
+        });
+
         subTasks.clear();
     }
 
     public List<SubTask> getSubTasksByEpicId(int epicId) {
-        List<SubTask> result = new ArrayList<>();
+        return subTasks.stream()
+                .filter(subTask -> subTask.getParentId() == epicId)
+                .toList();
+    }
+
+
+    private TaskStatus calculateEpicStatus(EpicTask epic) {
         List<Task> epicTasks = tasks.stream()
-                .filter(task -> task.getParentId() != null && task.getParentId() == epicId)
+                .filter(task -> task instanceof SubTask && ((SubTask) task).getParentId() == epic.getId())
                 .toList();
 
-        for (Task task : epicTasks) {
-            subTasks.stream()
-                    .filter(subTask -> subTask.getParentId() == task.getId())
-                    .forEach(result::add);
+        if (epicTasks.isEmpty()) {
+            return TaskStatus.NEW;
         }
-        return result;
+
+        boolean hasNewTasks = false;
+        boolean hasInProgressTasks = false;
+        boolean hasDoneTasks = false;
+
+        for (Task task : epicTasks) {
+            switch (task.getStatus()) {
+                case NEW -> hasNewTasks = true;
+                case IN_PROGRESS -> hasInProgressTasks = true;
+                case DONE -> hasDoneTasks = true;
+            }
+        }
+
+        if (hasDoneTasks && !hasNewTasks && !hasInProgressTasks) {
+            return TaskStatus.DONE;
+        } else if (hasInProgressTasks || (hasNewTasks && hasDoneTasks)) {
+            return TaskStatus.IN_PROGRESS;
+        }
+        return TaskStatus.NEW;
     }
 
     private <T extends Task> int getIndexById(List<T> list, int id) {

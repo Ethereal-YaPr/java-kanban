@@ -1,6 +1,6 @@
-package ru.common.manager;
+package ru.common.model;
 
-import ru.common.model.TaskManager;
+import ru.common.manager.TaskManager;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -11,8 +11,6 @@ public class Task {
     private String name;
     private String description;
     private TaskStatus status;
-    private Integer parentId;
-    private final List<Integer> subTaskIds = new ArrayList<>();
 
 
     public Task(String name, String description, Integer parentId) {
@@ -20,7 +18,6 @@ public class Task {
         this.id = TaskManager.getNextId();
         this.status = TaskStatus.NEW;
         this.description = description;
-        this.parentId = parentId;
     }
 
     public Task(String name, String description) {
@@ -34,7 +31,6 @@ public class Task {
         this.name = Objects.requireNonNull(name.trim(), "Имя не может быть null");
         this.id = TaskManager.getNextId();
         this.status = TaskStatus.NEW;
-        this.parentId = parentId;
     }
 
     public Task(String name) {
@@ -72,28 +68,6 @@ public class Task {
         this.status = Objects.requireNonNull(status, "Статус не может быть null");
     }
 
-    public Integer getParentId() {
-        return parentId;
-    }
-
-    public void setParentId(Integer parentId) {
-        this.parentId = parentId;
-    }
-
-    public List<Integer> getSubTaskIds() {
-        return new ArrayList<>(subTaskIds);
-    }
-
-    public void addSubTaskId(int subTaskId) {
-        if (!subTaskIds.contains(subTaskId)) {
-            subTaskIds.add(subTaskId);
-        }
-    }
-
-    public void removeSubTaskId(int subTaskId) {
-        subTaskIds.remove(Integer.valueOf(subTaskId));
-    }
-
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -109,7 +83,7 @@ public class Task {
 
     @Override
     public String toString() {
-        return "ru.common.manager.Task{" +
+        return "ru.common.model.Task{" +
                 "id=" + id +
                 ", name='" + name + '\'' +
                 ", status=" + status +
