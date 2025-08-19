@@ -1,13 +1,13 @@
-import ru.common.model.EpicTask;
-import ru.common.model.SubTask;
-import ru.common.model.Task;
-import ru.common.model.TaskStatus;
-import ru.common.manager.TaskManager;
+import ru.common.manager.task.InMemoryTaskManager;
+import ru.common.model.task.EpicTask;
+import ru.common.model.task.SubTask;
+import ru.common.model.task.TaskStatus;
+import ru.common.manager.task.TaskManager;
 import java.util.List;
 
 public class Main {
     public static void main(String[] args) {
-        TaskManager manager = new TaskManager();
+        TaskManager manager = new InMemoryTaskManager();
 
         System.out.println("=== СОЗДАНИЕ ЭПИКОВ ===");
         EpicTask projectEpic = manager.createEpic(new EpicTask("Разработка проекта", "Создание трекера задач"));
@@ -60,12 +60,12 @@ public class Main {
 
         System.out.println("Эпики (" + manager.getAllEpics().size() + "):");
         manager.getAllEpics().forEach(epic -> {
-            System.out.println("  [EPIC] " + epic.getName() + " [" + epic.getStatus() + "]");
+            System.out.println("  [EPIC] "+ epic.getId()+ " " + epic.getName() + " [" + epic.getStatus() + "]");
 
             List<SubTask> subtasks = manager.getSubTasksByEpicId(epic.getId());
             System.out.println("    Подзадачи (" + subtasks.size() + "):");
             subtasks.forEach(st ->
-                    System.out.println("    • [SUBTASK] " + st.getName() + " [" + st.getStatus() + "]")
+                    System.out.println("    • [SUBTASK] " +st.getId() + " " + st.getName() + " [" + st.getStatus() + "]")
             );
         });
         System.out.println("─".repeat(50));

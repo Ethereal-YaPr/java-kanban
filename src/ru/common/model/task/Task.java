@@ -1,9 +1,7 @@
-package ru.common.model;
+package ru.common.model.task;
 
-import ru.common.manager.TaskManager;
+import ru.common.manager.task.InMemoryTaskManager;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Objects;
 
 public class Task {
@@ -13,29 +11,36 @@ public class Task {
     private TaskStatus status;
 
 
+    Task(int id, String name, String description, TaskStatus status) {
+        this.id = id;
+        this.name = Objects.requireNonNull(name, "Имя не может быть null").trim();
+        this.description = description;
+        this.status = Objects.requireNonNull(status, "Статус не может быть null");
+    }
+
     public Task(String name, String description, Integer parentId) {
-        this.name = Objects.requireNonNull(name.trim(), "Имя не может быть null");
-        this.id = TaskManager.getNextId();
+        this.name = Objects.requireNonNull(name, "Имя не может быть null").trim();
+        this.id = InMemoryTaskManager.getNextId();
         this.status = TaskStatus.NEW;
         this.description = description;
     }
 
     public Task(String name, String description) {
-        this.name = Objects.requireNonNull(name.trim(), "Имя не может быть null");
-        this.id = TaskManager.getNextId();
+        this.name = Objects.requireNonNull(name, "Имя не может быть null").trim();
+        this.id = InMemoryTaskManager.getNextId();
         this.status = TaskStatus.NEW;
         this.description = description;
     }
 
     public Task(String name, int parentId) {
-        this.name = Objects.requireNonNull(name.trim(), "Имя не может быть null");
-        this.id = TaskManager.getNextId();
+        this.name = Objects.requireNonNull(name, "Имя не может быть null").trim();
+        this.id = InMemoryTaskManager.getNextId();
         this.status = TaskStatus.NEW;
     }
 
     public Task(String name) {
-        this.name = Objects.requireNonNull(name.trim(), "Имя не может быть null");
-        this.id = TaskManager.getNextId();
+        this.name = Objects.requireNonNull(name, "Имя не может быть null").trim();
+        this.id = InMemoryTaskManager.getNextId();
         this.status = TaskStatus.NEW;
     }
 
@@ -49,7 +54,7 @@ public class Task {
     }
 
     public void setName(String name) {
-        this.name = Objects.requireNonNull(name.trim(), "Имя не может быть null");
+        this.name = Objects.requireNonNull(name, "Имя не может быть null").trim();
     }
 
     public String getDescription() {
@@ -68,6 +73,10 @@ public class Task {
         this.status = Objects.requireNonNull(status, "Статус не может быть null");
     }
 
+    public Task copy() {
+        return new Task(id, name, description, status);
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -83,7 +92,7 @@ public class Task {
 
     @Override
     public String toString() {
-        return "ru.common.model.Task{" +
+        return "ru.common.model.task.Task{" +
                 "id=" + id +
                 ", name='" + name + '\'' +
                 ", status=" + status +

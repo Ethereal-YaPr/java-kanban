@@ -1,7 +1,12 @@
-package ru.common.model;
+package ru.common.model.task;
 
 public class SubTask extends Task {
     private Integer parentId;
+
+    SubTask(int id, String name, String description, TaskStatus status, Integer parentId) {
+        super(id, name, description, status);
+        this.parentId = parentId;
+    }
 
     public SubTask(String name, String description, int parentId) {
         super(name, description);
@@ -25,6 +30,13 @@ public class SubTask extends Task {
     }
 
     public void setParentId(Integer parentId) {
+        if (parentId != null && parentId.equals(getId())) {
+            return;
+        }
         this.parentId = parentId;
+    }
+
+    public SubTask copy() {
+        return new SubTask(getId(), getName(), getDescription(), getStatus(), parentId);
     }
 }
