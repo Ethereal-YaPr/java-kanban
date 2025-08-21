@@ -1,6 +1,5 @@
 package ru.common.manager.task;
 
-import ru.common.config.Config;
 import ru.common.model.task.EpicTask;
 import ru.common.model.task.SubTask;
 import ru.common.model.task.Task;
@@ -13,7 +12,7 @@ public class InMemoryTaskManager implements TaskManager {
     private final Map<Integer, EpicTask> epics = new HashMap<>();
     private final Map<Integer, Task> tasks = new HashMap<>();
     private final Map<Integer, SubTask> subTasks = new HashMap<>();
-    private final List<Task> history = new LinkedList<>();
+    private final HistoryManager historyManager = Managers.getDefaultHistory();
 
     public static int getNextId() {
         return nextId++;
@@ -34,6 +33,12 @@ public class InMemoryTaskManager implements TaskManager {
 
     @Override
     public void removeAllEpics() {
+        for (SubTask st : new ArrayList<>(subTasks.values())) {
+            historyManager.removeById(st.getId());
+        }
+        for (EpicTask e : new ArrayList<>(epics.values())) {
+            historyManager.removeById(e.getId());
+        }
         subTasks.clear();
         epics.clear();
     }
@@ -41,7 +46,7 @@ public class InMemoryTaskManager implements TaskManager {
     @Override
     public EpicTask getEpicById(int id) {
         EpicTask epic = epics.get(id);
-        addToHistory(epic);
+        historyManager.add(epic);
         return epic;
     }
 
@@ -56,10 +61,18 @@ public class InMemoryTaskManager implements TaskManager {
     @Override
     public boolean removeEpic(EpicTask epic) {
         if (epic == null) return false;
-        subTasks.values().stream()
-                .filter(subtask -> subtask.getParentId() == epic.getId())
-                .forEach(this::removeTask);
-        return epics.remove(epic.getId()) != null;
+        EpicTask storedEpic = epics.get(epic.getId());
+        for (Integer subId : storedEpic.getSubTaskIds()) { // уже копия
+            SubTask st = subTasks.get(subId);
+            if (st != null) {
+                removeTask(st);
+            }
+        }
+        boolean removed = epics.remove(epic.getId()) != null;
+        if (removed) {
+            historyManager.removeById(epic.getId());
+        }
+        return removed;
     }
 
     @Override
@@ -80,13 +93,18 @@ public class InMemoryTaskManager implements TaskManager {
 
     @Override
     public void removeAllTasks() {
+        for (Task t : new ArrayList<>(tasks.values())) {
+            if (!(t instanceof SubTask)) {
+                historyManager.removeById(t.getId());
+            }
+        }
         tasks.clear();
     }
 
     @Override
     public Task getTaskById(int id) {
         Task task = tasks.get(id);
-        addToHistory(task);
+        historyManager.add(task);
         return task == null ? null : task.copy();
     }
 
@@ -115,7 +133,11 @@ public class InMemoryTaskManager implements TaskManager {
             removeSubTaskAndUpdateEpic(subTask);
         }
 
-        return tasks.remove(task.getId()) != null;
+        boolean removed = tasks.remove(task.getId()) != null;
+        if (removed) {
+            historyManager.removeById(task.getId());
+        }
+        return removed;
     }
 
     private void removeSubTaskAndUpdateEpic(SubTask subTask) {
@@ -157,6 +179,9 @@ public class InMemoryTaskManager implements TaskManager {
             epic.clearSubTaskIds();
             updateEpicStatus(epic);
         });
+        for (SubTask st : new ArrayList<>(subTasks.values())) {
+            historyManager.removeById(st.getId());
+        }
         subTasks.clear();
         tasks.entrySet().removeIf(entry -> entry.getValue() instanceof SubTask);
     }
@@ -171,21 +196,13 @@ public class InMemoryTaskManager implements TaskManager {
     @Override
     public SubTask getSubTaskById(int id) {
         SubTask subTask = subTasks.get(id);
-        addToHistory(subTask);
+        historyManager.add(subTask);
         return subTask == null ? null : subTask.copy();
-    }
-
-    private <T extends Task> void addToHistory(T task) {
-        if (task == null) return;
-        history.add(task.copy());
-        if (history.size() > Config.HISTORY_COLLECTION_SIZE) {
-            history.removeFirst();
-        }
     }
 
     @Override
     public List<Task> getHistory() {
-        return new ArrayList<>(history);
+        return historyManager.getHistory();
     }
 
     private TaskStatus calculateEpicStatus(EpicTask epic) {

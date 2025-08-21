@@ -51,7 +51,7 @@ public class InMemoryTaskManagerTest {
     void managersGetDefaultReturnsReadyManager() {
         TaskManager manager = Managers.getDefault();
         assertNotNull(manager);
-        assertTrue(manager instanceof InMemoryTaskManager);
+        assertInstanceOf(InMemoryTaskManager.class, manager);
     }
 
     @Test
@@ -102,60 +102,4 @@ public class InMemoryTaskManagerTest {
         assertEquals(statusBefore, fromManager.getStatus());
     }
 
-    @Test
-    void historyManagerSavesSnapshotsPerView() {
-        TaskManager manager = Managers.getDefault();
-        Task t = new Task("T", "D");
-        manager.createTask(t);
-        
-        manager.getTaskById(t.getId());
-
-        t.setName("Changed");
-        t.setDescription("D2");
-        t.setStatus(TaskStatus.IN_PROGRESS);
-        manager.updateTask(t);
-        manager.getTaskById(t.getId());
-
-        var history = manager.getHistory();
-        assertTrue(history.size() >= 2);
-        assertEquals("T", history.get(history.size()-2).getName());
-        assertEquals("Changed", history.get(history.size()-1).getName());
-    }
-
-    @Test
-    void historyKeepsDuplicatesOnRepeatedViews() {
-        TaskManager manager = Managers.getDefault();
-        Task t = new Task("Dup");
-        manager.createTask(t);
-
-        manager.getTaskById(t.getId());
-        manager.getTaskById(t.getId());
-        manager.getTaskById(t.getId());
-
-        var history = manager.getHistory();
-        assertEquals(3, history.size());
-        assertEquals(t.getId(), history.get(0).getId());
-        assertEquals(t.getId(), history.get(1).getId());
-        assertEquals(t.getId(), history.get(2).getId());
-    }
-
-    @Test
-    void historyIsCappedAtTenAndEvictsOldest() {
-        TaskManager manager = Managers.getDefault();
-        Task[] tasks = new Task[12];
-        for (int i = 0; i < 12; i++) {
-            tasks[i] = new Task("T" + i);
-            manager.createTask(tasks[i]);
-        }
-
-        for (int i = 0; i < 12; i++) {
-            manager.getTaskById(tasks[i].getId());
-        }
-
-        var history = manager.getHistory();
-        assertEquals(10, history.size());
-        for (int i = 0; i < 10; i++) {
-            assertEquals(tasks[i + 2].getId(), history.get(i).getId());
-        }
-    }
 }
