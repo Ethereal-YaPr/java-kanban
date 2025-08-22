@@ -83,23 +83,22 @@ public class InMemoryTaskManagerTest {
     }
 
     @Test
-    void taskIsImmutableAfterAddingToManager() {
+    void managerStoresAndReturnsSameInstance() {
         TaskManager manager = Managers.getDefault();
         Task t = new Task("T", "D");
         manager.createTask(t);
-        int idBefore = t.getId();
-        String nameBefore = t.getName();
-        String descBefore = t.getDescription();
-        TaskStatus statusBefore = t.getStatus();
+        int id = t.getId();
 
+        // Изменяем исходный объект без вызова update
         t.setName("Changed");
         t.setDescription("NewD");
         t.setStatus(TaskStatus.DONE);
 
-        Task fromManager = manager.getTaskById(idBefore);
-        assertEquals(nameBefore, fromManager.getName());
-        assertEquals(descBefore, fromManager.getDescription());
-        assertEquals(statusBefore, fromManager.getStatus());
+        Task fromManager = manager.getTaskById(id);
+        assertSame(t, fromManager);
+        assertEquals("Changed", fromManager.getName());
+        assertEquals("NewD", fromManager.getDescription());
+        assertEquals(TaskStatus.DONE, fromManager.getStatus());
     }
 
 }

@@ -9,7 +9,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class HistoryManagerTest {
     @Test
-    void savesSnapshotsOnAdd() {
+    void storesSameInstancesAndReflectsChanges() {
         HistoryManager history = Managers.getDefaultHistory();
         Task t = new Task("A", "D");
         history.add(t);
@@ -17,10 +17,10 @@ public class HistoryManagerTest {
         history.add(t);
         List<Task> h = history.getHistory();
         assertEquals(2, h.size());
-        assertEquals("A", h.get(0).getName());
+        assertSame(t, h.get(0));
+        assertSame(t, h.get(1));
+        assertEquals("B", h.get(0).getName());
         assertEquals("B", h.get(1).getName());
-        assertNotSame(t, h.get(0));
-        assertNotSame(t, h.get(1));
     }
 
     @Test

@@ -21,9 +21,8 @@ public class InMemoryTaskManager implements TaskManager {
     @Override
     public EpicTask createEpic(EpicTask epic) {
         Objects.requireNonNull(epic, "Эпик не может быть null");
-        EpicTask stored = epic.copy();
-        epics.put(stored.getId(), stored);
-        return stored.copy();
+        epics.put(epic.getId(), epic);
+        return epic;
     }
 
     @Override
@@ -78,12 +77,11 @@ public class InMemoryTaskManager implements TaskManager {
     @Override
     public Task createTask(Task task) {
         Objects.requireNonNull(task, "Задача не может быть null");
-        Task stored = (task instanceof SubTask st) ? st.copy() : task.copy();
-        tasks.put(stored.getId(), stored);
-        if (stored instanceof SubTask) {
-            subTasks.put(stored.getId(), (SubTask) stored);
+        tasks.put(task.getId(), task);
+        if (task instanceof SubTask) {
+            subTasks.put(task.getId(), (SubTask) task);
         }
-        return stored.copy();
+        return task;
     }
 
     @Override
@@ -105,17 +103,17 @@ public class InMemoryTaskManager implements TaskManager {
     public Task getTaskById(int id) {
         Task task = tasks.get(id);
         historyManager.add(task);
-        return task == null ? null : task.copy();
+        return task;
     }
 
     @Override
     public boolean updateTask(Task task) {
         Objects.requireNonNull(task, "Задача не может быть null");
         if (!tasks.containsKey(task.getId())) return false;
-        Task target = tasks.get(task.getId());
-        target.setName(task.getName());
-        target.setDescription(task.getDescription());
-        target.setStatus(task.getStatus());
+        tasks.put(task.getId(), task);
+        if (task instanceof SubTask) {
+            subTasks.put(task.getId(), (SubTask) task);
+        }
         if (task instanceof SubTask subTask) {
             EpicTask epicTask = epics.get(subTask.getParentId());
             if (epicTask != null) {
@@ -160,12 +158,11 @@ public class InMemoryTaskManager implements TaskManager {
         if (parentTask == null) {
             throw new IllegalArgumentException("Родительская задача не найдена");
         }
-        SubTask stored = subTask.copy();
-        subTasks.put(stored.getId(), stored);
-        tasks.put(stored.getId(), stored);
-        parentTask.addSubTaskId(stored.getId());
+        subTasks.put(subTask.getId(), subTask);
+        tasks.put(subTask.getId(), subTask);
+        parentTask.addSubTaskId(subTask.getId());
         updateEpicStatus(parentTask);
-        return stored.copy();
+        return subTask;
     }
 
     @Override
@@ -197,7 +194,7 @@ public class InMemoryTaskManager implements TaskManager {
     public SubTask getSubTaskById(int id) {
         SubTask subTask = subTasks.get(id);
         historyManager.add(subTask);
-        return subTask == null ? null : subTask.copy();
+        return subTask;
     }
 
     @Override

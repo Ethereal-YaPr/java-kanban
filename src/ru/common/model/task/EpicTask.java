@@ -49,8 +49,5 @@ public class EpicTask extends Task {
         subTaskIds.clear();
     }
 
-    public EpicTask copy() {
-        return new EpicTask(getId(), getName(), getDescription(), getStatus(), new ArrayList<>(subTaskIds));
-    }
 }
 

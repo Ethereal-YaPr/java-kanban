@@ -11,11 +11,17 @@ public class SubTask extends Task {
     public SubTask(String name, String description, int parentId) {
         super(name, description);
         this.parentId = parentId;
+        if (this.parentId != null && this.parentId.equals(getId())) {
+            this.parentId = null;
+        }
     }
 
     public SubTask(String name, int parentId) {
         super(name);
         this.parentId = parentId;
+        if (this.parentId != null && this.parentId.equals(getId())) {
+            this.parentId = null;
+        }
     }
 
     public SubTask(String name) {
@@ -36,7 +42,4 @@ public class SubTask extends Task {
         this.parentId = parentId;
     }
 
-    public SubTask copy() {
-        return new SubTask(getId(), getName(), getDescription(), getStatus(), parentId);
-    }
 }

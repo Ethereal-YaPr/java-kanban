@@ -13,7 +13,7 @@ public class InMemoryHistoryManager implements HistoryManager {
     @Override
     public <T extends Task> void add(T task) {
         if (task == null) return;
-        history.add(task.copy());
+        history.add(task);
         if (history.size() > Config.HISTORY_COLLECTION_SIZE) {
             history.removeFirst();
         }

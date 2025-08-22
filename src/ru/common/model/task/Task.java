@@ -73,10 +73,6 @@ public class Task {
         this.status = Objects.requireNonNull(status, "Статус не может быть null");
     }
 
-    public Task copy() {
-        return new Task(id, name, description, status);
-    }
-
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
