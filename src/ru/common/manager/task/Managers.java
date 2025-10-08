@@ -1,5 +1,8 @@
 package ru.common.manager.task;
 
+import ru.common.manager.history.HistoryManager;
+import ru.common.manager.history.InMemoryHistoryManager;
+
 public class Managers {
     public static TaskManager getDefault() {
         return new InMemoryTaskManager();

@@ -1,4 +1,4 @@
-package ru.common.manager.task;
+package ru.common.manager.history;
 
 import ru.common.model.task.Task;
 
@@ -10,6 +10,8 @@ public interface HistoryManager {
     List<Task> getHistory();
 
     void removeById(int id);
+    
+    String getHistoryAsString();
 }
 
 

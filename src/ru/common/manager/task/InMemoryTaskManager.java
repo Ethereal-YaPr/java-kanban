@@ -1,5 +1,6 @@
 package ru.common.manager.task;
 
+import ru.common.manager.history.HistoryManager;
 import ru.common.model.task.EpicTask;
 import ru.common.model.task.SubTask;
 import ru.common.model.task.Task;
@@ -200,6 +201,11 @@ public class InMemoryTaskManager implements TaskManager {
 	@Override
 	public List<Task> getHistory() {
 		return historyManager.getHistory();
+	}
+
+	@Override
+	public String getHistoryAsString() {
+		return historyManager.getHistoryAsString();
 	}
 
 	private TaskStatus calculateEpicStatus(EpicTask epic) {
