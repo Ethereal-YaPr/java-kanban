@@ -1,6 +1,7 @@
 package ru.common.manager.task;
 
 import org.junit.jupiter.api.Test;
+import ru.common.manager.history.HistoryManager;
 import ru.common.model.task.Task;
 
 import java.util.List;
@@ -9,47 +10,60 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class HistoryManagerTest {
     @Test
-    void storesSameInstancesAndReflectsChanges() {
+    void storesSameInstanceAndReflectsChanges_noDuplicates() {
         HistoryManager history = Managers.getDefaultHistory();
         Task t = new Task("A", "D");
         history.add(t);
         t.setName("B");
         history.add(t);
         List<Task> h = history.getHistory();
-        assertEquals(2, h.size());
+        assertEquals(1, h.size());
         assertSame(t, h.get(0));
-        assertSame(t, h.get(1));
         assertEquals("B", h.get(0).getName());
-        assertEquals("B", h.get(1).getName());
     }
 
     @Test
-    void keepsDuplicatesOnRepeatedAdds() {
+    void deduplicatesAndMovesToEndOnRepeatedAdds() {
         HistoryManager history = Managers.getDefaultHistory();
-        Task t = new Task("Dup");
-        history.add(t);
-        history.add(t);
-        history.add(t);
+        Task t1 = new Task("T1");
+        Task t2 = new Task("T2");
+        history.add(t1);
+        history.add(t2);
+        history.add(t1); // t1 должен переместиться в конец
         List<Task> h = history.getHistory();
-        assertEquals(3, h.size());
-        assertEquals(t.getId(), h.get(0).getId());
-        assertEquals(t.getId(), h.get(1).getId());
-        assertEquals(t.getId(), h.get(2).getId());
+        assertEquals(2, h.size());
+        assertEquals(t2.getId(), h.get(0).getId());
+        assertEquals(t1.getId(), h.get(1).getId());
     }
 
     @Test
-    void cappedAtTenEvictsOldest() {
+    void removeByIdRemovesFromLinkedStructure() {
         HistoryManager history = Managers.getDefaultHistory();
-        Task[] tasks = new Task[12];
-        for (int i = 0; i < 12; i++) {
-            tasks[i] = new Task("T" + i);
-            history.add(tasks[i]);
-        }
+        Task t1 = new Task("T1");
+        Task t2 = new Task("T2");
+        Task t3 = new Task("T3");
+        history.add(t1);
+        history.add(t2);
+        history.add(t3);
+        history.removeById(t2.getId());
         List<Task> h = history.getHistory();
-        assertEquals(10, h.size());
-        for (int i = 0; i < 10; i++) {
-            assertEquals(tasks[i + 2].getId(), h.get(i).getId());
-        }
+        assertEquals(2, h.size());
+        assertEquals(t1.getId(), h.get(0).getId());
+        assertEquals(t3.getId(), h.get(1).getId());
+    }
+
+    @Test
+    void getHistoryAsStringContainsIdsAndOrder() {
+        HistoryManager history = Managers.getDefaultHistory();
+        Task t1 = new Task("T1");
+        Task t2 = new Task("T2");
+        history.add(t1);
+        history.add(t2);
+        String s = history.getHistoryAsString();
+        assertTrue(s.contains("ID: " + t1.getId()));
+        assertTrue(s.contains("ID: " + t2.getId()));
+        // порядок: сначала t1, потом t2
+        assertTrue(s.indexOf("ID: " + t1.getId()) < s.indexOf("ID: " + t2.getId()));
     }
 }
 
