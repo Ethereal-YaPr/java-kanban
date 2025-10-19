@@ -34,7 +34,7 @@ public class InMemoryTaskManagerTest {
     }
 
     @Test
-    void epicCannotAddItselfAsSubtask() {
+    void epicCannotAddItselfAsSubTask() {
         EpicTask epic = new EpicTask("Epic");
         epic.addSubTaskId(epic.getId());
         assertFalse(epic.getSubTaskIds().contains(epic.getId()));

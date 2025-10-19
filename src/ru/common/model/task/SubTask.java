@@ -42,4 +42,17 @@ public class SubTask extends Task {
         this.parentId = parentId;
     }
 
+    @Override
+    public String toCSVString() {
+        // CSV: id,type,name,status,description,epic
+        Integer epicId = parentId;
+        return String.format("%d,%s,%s,%s,%s,%s",
+                this.getId(),
+                TaskType.SUBTASK,
+                this.getName(),
+                this.getStatus(),
+                this.getDescription(),
+                epicId == null ? "" : epicId.toString());
+    }
+
 }
