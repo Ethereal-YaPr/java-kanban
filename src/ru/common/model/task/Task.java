@@ -5,7 +5,7 @@ import ru.common.manager.task.InMemoryTaskManager;
 import java.util.Objects;
 
 public class Task {
-    private final int id;
+    private int id;
     private String name;
     private String description;
     private TaskStatus status;
@@ -48,6 +48,9 @@ public class Task {
         return id;
     }
 
+    public void setId(int id) {
+        this.id = id;
+    }
 
     public String getName() {
         return name;
@@ -93,5 +96,19 @@ public class Task {
                 ", name='" + name + '\'' +
                 ", status=" + status +
                 '}';
+    }
+    private TaskType getTaskType() {
+        if (this instanceof EpicTask) {
+            return TaskType.EPIC;
+        } else if (this instanceof SubTask) {
+            return TaskType.SUBTASK;
+        } else {
+            return TaskType.TASK;
+        }
+    }
+
+    public String toCSVString() {
+        // CSV: id,type,name,status,description,epic
+        return String.format("%d,%s,%s,%s,%s,", this.id, getTaskType(), this.name, this.status, this.description);
     }
 }

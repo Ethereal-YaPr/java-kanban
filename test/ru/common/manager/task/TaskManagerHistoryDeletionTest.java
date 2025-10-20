@@ -20,7 +20,7 @@ public class TaskManagerHistoryDeletionTest {
     }
 
     @Test
-    void removeEpicRemovesEpicAndSubtaskFromHistory() {
+    void removeEpicRemovesEpicAndSubTaskFromHistory() {
         TaskManager manager = Managers.getDefault();
         EpicTask e = new EpicTask("E");
         manager.createEpic(e);
@@ -54,7 +54,7 @@ public class TaskManagerHistoryDeletionTest {
     }
 
     @Test
-    void removeAllSubTasksRemovesSubtasksFromHistory() {
+    void removeAllSubTasksRemovesSubTasksFromHistory() {
         TaskManager manager = Managers.getDefault();
         EpicTask e = new EpicTask("E");
         manager.createEpic(e);
@@ -70,7 +70,7 @@ public class TaskManagerHistoryDeletionTest {
     }
 
     @Test
-    void removeAllEpicsRemovesEpicsAndSubtasksFromHistory() {
+    void removeAllEpicsRemovesEpicsAndSubTasksFromHistory() {
         TaskManager manager = Managers.getDefault();
         EpicTask e1 = new EpicTask("E1");
         EpicTask e2 = new EpicTask("E2");
