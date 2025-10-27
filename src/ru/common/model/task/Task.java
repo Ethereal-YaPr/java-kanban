@@ -1,7 +1,10 @@
 package ru.common.model.task;
 
 import ru.common.manager.task.InMemoryTaskManager;
+import ru.common.util.CustomDateTimeFormatter;
 
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.Objects;
 
 public class Task {
@@ -9,39 +12,50 @@ public class Task {
     private String name;
     private String description;
     private TaskStatus status;
+    private LocalDateTime startTime;
+    private Duration duration;
 
-
-    Task(int id, String name, String description, TaskStatus status) {
+    Task(int id, String name, String description, TaskStatus status, LocalDateTime startTime, Duration duration) {
         this.id = id;
         this.name = Objects.requireNonNull(name, "Имя не может быть null").trim();
         this.description = description;
         this.status = Objects.requireNonNull(status, "Статус не может быть null");
+        this.startTime = startTime;
+        this.duration = duration;
     }
 
-    public Task(String name, String description, Integer parentId) {
+    public Task(String name, String description, Integer parentId, LocalDateTime startTime, Duration duration) {
         this.name = Objects.requireNonNull(name, "Имя не может быть null").trim();
         this.id = InMemoryTaskManager.getNextId();
         this.status = TaskStatus.NEW;
         this.description = description;
+        this.startTime = startTime;
+        this.duration = duration;
     }
 
-    public Task(String name, String description) {
+    public Task(String name, String description, LocalDateTime startTime, Duration duration) {
         this.name = Objects.requireNonNull(name, "Имя не может быть null").trim();
         this.id = InMemoryTaskManager.getNextId();
         this.status = TaskStatus.NEW;
         this.description = description;
+        this.startTime = startTime;
+        this.duration = duration;
     }
 
-    public Task(String name, int parentId) {
+    public Task(String name, int parentId, LocalDateTime startTime, Duration duration) {
         this.name = Objects.requireNonNull(name, "Имя не может быть null").trim();
         this.id = InMemoryTaskManager.getNextId();
         this.status = TaskStatus.NEW;
+        this.startTime = startTime;
+        this.duration = duration;
     }
 
-    public Task(String name) {
+    public Task(String name, LocalDateTime startTime, Duration duration) {
         this.name = Objects.requireNonNull(name, "Имя не может быть null").trim();
         this.id = InMemoryTaskManager.getNextId();
         this.status = TaskStatus.NEW;
+        this.startTime = startTime;
+        this.duration = duration;
     }
 
     public int getId() {
@@ -76,6 +90,29 @@ public class Task {
         this.status = Objects.requireNonNull(status, "Статус не может быть null");
     }
 
+    public LocalDateTime getStartTime() {
+        return startTime;
+    }
+
+    public void setStartTime(LocalDateTime startTime) {
+        this.startTime = startTime;
+    }
+
+    public Duration getDuration() {
+        return duration;
+    }
+
+    public void setDuration(Duration duration) {
+        this.duration = duration;
+    }
+
+    public LocalDateTime getEndTime() {
+        if (startTime == null || duration == null) {
+            return null;
+        }
+        return startTime.plus(duration);
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -91,12 +128,18 @@ public class Task {
 
     @Override
     public String toString() {
-        return "ru.common.model.task.Task{" +
-                "id=" + id +
-                ", name='" + name + '\'' +
-                ", status=" + status +
-                '}';
+        return String.format("Задача №%d: %s\n" +
+                        "Статус: %s\n" +
+                        "Описание: %s\n" +
+                        "Начало: %s\n" +
+                        "Длительность: %d ч. %d мин.\n",
+                this.id, this.name, this.status, this.description,
+                startTime != null ? startTime.format(CustomDateTimeFormatter.DATE_TIME_FORMATTER) : "Не задано",
+                duration != null ? duration.toHours() : 0,
+                duration != null ? duration.toMinutesPart() : 0
+        );
     }
+
     private TaskType getTaskType() {
         if (this instanceof EpicTask) {
             return TaskType.EPIC;
@@ -108,7 +151,8 @@ public class Task {
     }
 
     public String toCSVString() {
-        // CSV: id,type,name,status,description,epic
-        return String.format("%d,%s,%s,%s,%s,", this.id, getTaskType(), this.name, this.status, this.description);
+        String startTimeStr = (getStartTime() != null) ? getStartTime().toString() : "";
+        String durationStr = (getDuration() != null) ? String.valueOf(getDuration().toMinutes()) : "";
+        return String.format("%d,%s,%s,%s,%s,,%s,%s", this.id, getTaskType(), this.name, this.status, this.description, startTimeStr, durationStr);
     }
 }

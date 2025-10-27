@@ -39,9 +39,15 @@ public interface TaskManager {
 
     void removeAllSubTasks();
 
+    boolean updateSubTask(SubTask subTask);
+
+    boolean removeSubTask(int subTaskId);
+
     List<SubTask> getSubTasksByEpicId(int epicId);
 
     List<Task> getHistory();
-    
+
     String getHistoryAsString();
+
+    List<Task> getPrioritizedTasks();
 }

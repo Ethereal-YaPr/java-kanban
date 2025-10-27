@@ -4,12 +4,12 @@ public class SubTask extends Task {
     private Integer parentId;
 
     SubTask(int id, String name, String description, TaskStatus status, Integer parentId) {
-        super(id, name, description, status);
+        super(id, name, description, status, null, null);
         this.parentId = parentId;
     }
 
     public SubTask(String name, String description, int parentId) {
-        super(name, description);
+        super(name, description, null, null);
         this.parentId = parentId;
         if (this.parentId != null && this.parentId.equals(getId())) {
             this.parentId = null;
@@ -17,7 +17,7 @@ public class SubTask extends Task {
     }
 
     public SubTask(String name, int parentId) {
-        super(name);
+        super(name, null, null);
         this.parentId = parentId;
         if (this.parentId != null && this.parentId.equals(getId())) {
             this.parentId = null;
@@ -25,10 +25,11 @@ public class SubTask extends Task {
     }
 
     public SubTask(String name) {
-        super(name);
+        super(name, null, null);
     }
+
     public SubTask(String name, String description) {
-        super(name, description);
+        super(name, description, null, null);
     }
 
     public Integer getParentId() {
@@ -44,15 +45,17 @@ public class SubTask extends Task {
 
     @Override
     public String toCSVString() {
-        // CSV: id,type,name,status,description,epic
         Integer epicId = parentId;
-        return String.format("%d,%s,%s,%s,%s,%s",
+        String startTimeStr = (getStartTime() != null) ? getStartTime().toString() : "";
+        String durationStr = (getDuration() != null) ? String.valueOf(getDuration().toMinutes()) : "";
+        return String.format("%d,%s,%s,%s,%s,%s,%s,%s",
                 this.getId(),
                 TaskType.SUBTASK,
                 this.getName(),
                 this.getStatus(),
                 this.getDescription(),
-                epicId == null ? "" : epicId.toString());
+                epicId == null ? "" : epicId.toString(),
+                startTimeStr,
+                durationStr);
     }
-
 }
