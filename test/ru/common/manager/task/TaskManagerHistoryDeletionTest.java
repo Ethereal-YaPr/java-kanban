@@ -1,24 +1,20 @@
 package ru.common.manager.task;
-
 import org.junit.jupiter.api.Test;
 import ru.common.model.task.EpicTask;
 import ru.common.model.task.SubTask;
 import ru.common.model.task.Task;
-
 import static org.junit.jupiter.api.Assertions.*;
-
 public class TaskManagerHistoryDeletionTest {
     @Test
     void removeTaskRemovesFromHistory() {
         TaskManager manager = Managers.getDefault();
-        Task t = new Task("T");
+        Task t = new Task("T", null, null);
         manager.createTask(t);
         manager.getTaskById(t.getId());
         assertFalse(manager.getHistory().isEmpty());
         manager.removeTask(t);
         assertTrue(manager.getHistory().stream().noneMatch(x -> x.getId() == t.getId()));
     }
-
     @Test
     void removeEpicRemovesEpicAndSubTaskFromHistory() {
         TaskManager manager = Managers.getDefault();
@@ -32,7 +28,6 @@ public class TaskManagerHistoryDeletionTest {
         assertTrue(manager.getHistory().stream().noneMatch(x -> x.getId() == e.getId()));
         assertTrue(manager.getHistory().stream().noneMatch(x -> x.getId() == s.getId()));
     }
-
     @Test
     void removeAllTasksRemovesOnlyTasksFromHistory() {
         TaskManager manager = Managers.getDefault();
@@ -40,8 +35,8 @@ public class TaskManagerHistoryDeletionTest {
         manager.createEpic(e);
         SubTask s = new SubTask("S", e.getId());
         manager.createSubTask(s);
-        Task t1 = new Task("T1");
-        Task t2 = new Task("T2");
+        Task t1 = new Task("T1", null, null);
+        Task t2 = new Task("T2", null, null);
         manager.createTask(t1);
         manager.createTask(t2);
         manager.getTaskById(t1.getId());
@@ -52,7 +47,6 @@ public class TaskManagerHistoryDeletionTest {
         assertTrue(manager.getHistory().stream().noneMatch(x -> x.getId() == t2.getId()));
         assertTrue(manager.getHistory().stream().anyMatch(x -> x.getId() == s.getId()));
     }
-
     @Test
     void removeAllSubTasksRemovesSubTasksFromHistory() {
         TaskManager manager = Managers.getDefault();
@@ -68,7 +62,6 @@ public class TaskManagerHistoryDeletionTest {
         assertTrue(manager.getHistory().stream().noneMatch(x -> x.getId() == s1.getId()));
         assertTrue(manager.getHistory().stream().noneMatch(x -> x.getId() == s2.getId()));
     }
-
     @Test
     void removeAllEpicsRemovesEpicsAndSubTasksFromHistory() {
         TaskManager manager = Managers.getDefault();
@@ -91,5 +84,3 @@ public class TaskManagerHistoryDeletionTest {
         assertTrue(manager.getHistory().stream().noneMatch(x -> x.getId() == s2.getId()));
     }
 }
-
-

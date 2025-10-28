@@ -10,8 +10,6 @@ public interface HistoryManager {
     List<Task> getHistory();
 
     void removeById(int id);
-    
+
     String getHistoryAsString();
 }
-
-

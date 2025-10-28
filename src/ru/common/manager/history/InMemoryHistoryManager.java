@@ -9,14 +9,12 @@ public class InMemoryHistoryManager implements HistoryManager {
     private Node head;
     private Node tail;
 
-
     @Override
     public <T extends Task> void add(T task) {
-        if (task == null) return;
-        if(history.containsKey(task.getId())) {
+        Objects.requireNonNull(task, "Задача не может быть null");
+        if (history.containsKey(task.getId())) {
             removeNode(history.get(task.getId()));
         }
-
         Node node = new Node(task);
         linkLast(node);
         history.put(task.getId(), node);
@@ -38,20 +36,19 @@ public class InMemoryHistoryManager implements HistoryManager {
         if (historyList.isEmpty()) {
             return "История пуста";
         }
-        
         StringBuilder sb = new StringBuilder();
         sb.append("История просмотров (последние ").append(historyList.size()).append("):\n");
         for (int i = 0; i < historyList.size(); i++) {
             Task task = historyList.get(i);
             sb.append(i + 1).append(". [ID: ").append(task.getId()).append("] ")
-              .append(task.getName()).append(" (").append(task.getClass().getSimpleName()).append(")\n");
+                    .append(task.getName()).append(" (").append(task.getClass().getSimpleName()).append(")\n");
         }
         return sb.toString();
     }
 
     @Override
     public void removeById(int id) {
-        if(history.containsKey(id)) {
+        if (history.containsKey(id)) {
             removeNode(history.get(id));
         }
     }
@@ -59,7 +56,6 @@ public class InMemoryHistoryManager implements HistoryManager {
     private void linkLast(Node node) {
         node.prev = tail;
         node.next = null;
-
         if (tail == null) {
             head = node;
         } else {
@@ -70,24 +66,20 @@ public class InMemoryHistoryManager implements HistoryManager {
 
     private void removeNode(Node node) {
         if (node == null) return;
-
         Node prev = node.prev;
         Node next = node.next;
-
         if (prev != null) {
             prev.next = next;
         }
         if (next != null) {
             next.prev = prev;
         }
-
         if (node == head) {
             head = next;
         }
         if (node == tail) {
             tail = prev;
         }
-
         node.prev = null;
         node.next = null;
         history.remove(node.task.getId());
@@ -102,7 +94,4 @@ public class InMemoryHistoryManager implements HistoryManager {
             this.task = task;
         }
     }
-
 }
-
-
