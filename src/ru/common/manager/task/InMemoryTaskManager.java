@@ -1,5 +1,6 @@
 package ru.common.manager.task;
 
+import ru.common.manager.exceptions.NotFoundException;
 import ru.common.manager.history.HistoryManager;
 import ru.common.model.task.EpicTask;
 import ru.common.model.task.SubTask;
@@ -75,7 +76,8 @@ public class InMemoryTaskManager implements TaskManager {
 
     @Override
     public boolean removeEpic(EpicTask epic) {
-        if (epic == null) return false;
+        if (epic == null || !epics.containsKey(epic.getId()))
+            throw new NotFoundException("Epic with id " + (epic != null ? epic.getId() : null) + " not found");
         EpicTask storedEpic = epics.get(epic.getId());
         storedEpic.getSubTaskIds().stream()
                 .map(subTasks::get)
@@ -174,9 +176,12 @@ public class InMemoryTaskManager implements TaskManager {
 
     @Override
     public boolean removeTask(Task task) {
-        if (task == null) return false;
+        if (task == null) throw new NotFoundException("Task is null");
         boolean removed;
         if (task instanceof SubTask subTask) {
+            if (!subTasks.containsKey(subTask.getId())) {
+                throw new NotFoundException("SubTask with id " + subTask.getId() + " not found");
+            }
             removed = subTasks.remove(subTask.getId()) != null;
             if (removed) {
                 removeFromPrioritizedTasks(subTask);
@@ -187,6 +192,9 @@ public class InMemoryTaskManager implements TaskManager {
                 }
             }
         } else {
+            if (!tasks.containsKey(task.getId())) {
+                throw new NotFoundException("Task with id " + task.getId() + " not found");
+            }
             removed = tasks.remove(task.getId()) != null;
             if (removed) {
                 removeFromPrioritizedTasks(task);
@@ -296,8 +304,9 @@ public class InMemoryTaskManager implements TaskManager {
 
     @Override
     public boolean removeSubTask(int subTaskId) {
+        if (!subTasks.containsKey(subTaskId))
+            throw new NotFoundException("SubTask with id " + subTaskId + " not found");
         SubTask subTask = subTasks.get(subTaskId);
-        if (subTask == null) return false;
         historyManager.removeById(subTaskId);
         removeFromPrioritizedTasks(subTask);
         EpicTask parentEpic = epics.get(subTask.getParentId());
