@@ -33,12 +33,18 @@ public class EpicsHandler extends BaseHttpHandler implements HttpHandler {
                     } else if (parts.size() == 2) {
                         Integer id = getIdFromPathOrQuery(exchange);
                         EpicTask epic = manager.getEpicById(id);
-                        if (epic == null) { sendNotFound(exchange, "Epic not found"); return; }
+                        if (epic == null) {
+                            sendNotFound(exchange, "Epic not found");
+                            return;
+                        }
                         sendText(exchange, gson.toJson(epic));
                     } else if (parts.size() == 3 && "subtasks".equals(parts.get(2))) {
                         int id = Integer.parseInt(parts.get(1));
                         EpicTask epic = manager.getEpicById(id);
-                        if (epic == null) { sendNotFound(exchange, "Epic not found"); return; }
+                        if (epic == null) {
+                            sendNotFound(exchange, "Epic not found");
+                            return;
+                        }
                         List<SubTask> subs = manager.getSubTasksByEpicId(id);
                         sendText(exchange, gson.toJson(subs));
                     } else {
@@ -64,7 +70,10 @@ public class EpicsHandler extends BaseHttpHandler implements HttpHandler {
                         manager.removeAllEpics();
                     } else {
                         EpicTask epic = manager.getEpicById(id);
-                        if (epic == null) { sendNotFound(exchange, "Epic not found"); return; }
+                        if (epic == null) {
+                            sendNotFound(exchange, "Epic not found");
+                            return;
+                        }
                         manager.removeEpic(epic);
                     }
                     exchange.sendResponseHeaders(200, 0);
